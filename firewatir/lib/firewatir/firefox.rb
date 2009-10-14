@@ -319,6 +319,25 @@ module FireWatir
       end
     end
     
+    # Closes all firefox windows
+    def close_all
+      total_windows = js_eval("getWindows().length").to_i
+      
+      # start from last window  
+      while(total_windows > 0) do
+        js_eval "getWindows()[#{total_windows - 1}].close()"
+        total_windows = total_windows - 1
+      end    
+      
+      if current_os == :macosx
+        %x{ osascript -e 'tell application "Firefox" to quit' }
+      end  
+      
+      if current_os == :windows
+        system("taskkill /im Firefox.exe /f /t >nul 2>&1")
+      end
+      
+    end
     #   Used for attaching pop up window to an existing Firefox window, either by url or title.
     #   ff.attach(:url, 'http://www.google.com')
     #   ff.attach(:title, 'Google') 
@@ -581,21 +600,54 @@ module FireWatir
     
     #
     # Description:
-    #   Redefines the alert and confirm methods on the basis of button to be clicked.
-    #   This is done so that JSSh doesn't get blocked. You should use click_no_wait method before calling this function.
-    #
-    #   Typical Usage:
-    #   ff.button(:id, "button").click_no_wait
-    #   ff.click_jspopup_button("OK")
-    #
+    #    Clicks the javascript dialog button
     # Input:
     #   button - JavaScript button to be clicked. Values can be OK or Cancel
     #
-    #def click_jspopup_button(button)
-    #    button = button.downcase
-    #    element = Element.new(nil)
-    #    element.click_js_popup(button)
-    #end
+    def click_jspopup_button(button, wait=5)
+        sleep(wait)
+        button = button.downcase
+        jssh_command = "var length = getWindows().length; var win;var found=false;"
+        jssh_command << "for(var i = 0; i < length; i++)"
+        jssh_command << "{"
+        jssh_command << "   win = getWindows()[i];"
+        jssh_command << "   if(win.document.title == \"[JavaScript Application]\")"
+        jssh_command << "   {"
+        jssh_command << "       found = true; break;"
+        jssh_command << "   }"
+        jssh_command << "}"
+        jssh_command << "if(found)"
+        jssh_command << "{"
+        jssh_command << "   var jsdocument = win.document;"
+        jssh_command << "   var dialog = jsdocument.getElementsByTagName(\"dialog\")[0];"
+        jssh_command << "   dialog.getButton(\"accept\").click();" if(button == "ok")
+        jssh_command << "   dialog.getButton(\"cancel\").click(); " if(button == "cancel")
+        jssh_command << "}"
+        js_eval(jssh_command)
+    end
+    
+    def logon(username, password, wait=5)
+        sleep(wait)
+        jssh_command = "var length = getWindows().length; var win;var found=false;"
+        jssh_command << "for(var i = 0; i < length; i++)"
+        jssh_command << "{"
+        jssh_command << "   win = getWindows()[i];"
+        jssh_command << "   if(win.document.title == \"Authentication Required\")"
+        jssh_command << "   {"
+        jssh_command << "       found = true; break;"
+        jssh_command << "   }"
+        jssh_command << "}"
+        jssh_command << "if(found)"
+        jssh_command << "{"
+        jssh_command << "   var jsdocument = win.document;"
+        jssh_command << "   var dialog = jsdocument.getElementsByTagName(\"dialog\")[0];"
+        jssh_command << "   jsdocument.getElementsByTagName(\"textbox\")[0].value = \"#{username}\";"
+        jssh_command << "   jsdocument.getElementsByTagName(\"textbox\")[1].value = \"#{password}\";"
+        jssh_command << "   dialog.getButton(\"accept\").click();"
+        jssh_command << "}"
+        
+        js_eval(jssh_command)
+    end
     
     #
     # Description:

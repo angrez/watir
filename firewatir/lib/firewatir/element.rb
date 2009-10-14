@@ -1114,24 +1114,32 @@ module FireWatir
     #
     # Description:
     #   Function is used for click events that generates javascript pop up.
-    #   Doesn't fire the click event immediately instead, it stores the state of the object. User then tells which button
-    #   is to be clicked in case a javascript pop up comes after clicking the element. Depending upon the button to be clicked
-    #   the functions 'alert' and 'confirm' are re-defined in JavaScript to return appropriate values either true or false. Then the
-    #   re-defined functions are send to jssh which then fires the click event of the element using the state
-    #   stored above. So the click event is fired in the second statement. Therefore, if you are using this function you
-    #   need to call 'click_js_popup_button()' function in the next statement to actually trigger the click event.
-    #
-    #   Typical Usage:
-    #       ff.button(:id, "button").click_no_wait()
-    #       ff.click_js_popup_button("OK")
-    #
-    #def click_no_wait
-    #    assert_exists
-    #    assert_enabled
-    #
-    #    highlight(:set)
-    #    @@current_js_object = Element.new("#{element_object}", @container)
-    #end
+    def click_no_wait
+        assert_exists
+        assert_enabled
+    
+        highlight(:set)
+        case element_type
+      
+            when "HTMLAnchorElement", "HTMLImageElement"
+            # Special check for link or anchor tag. Because click() doesn't work on links.
+            # More info: http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-48250443
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=148585
+          
+            jssh_command = "var event = #{@container.document_var}.createEvent(\"MouseEvents\");"
+          
+            # Info about initMouseEvent at: http://www.xulplanet.com/references/objref/MouseEvent.html
+            jssh_command << "event.initMouseEvent('click',true,true,null,1,0,0,0,0,false,false,false,false,0,null);"
+            jssh_command << "#{element_object}.dispatchEvent(event);\n"
+          
+            #puts "jssh_command is: #{jssh_command}"
+            jssh_socket.send("#{jssh_command}", 0)
+            read_socket()
+        else
+            jssh_socket.send("#{@container.browser_var}.contentWindow.setTimeout(function() { #{element_object}.click()}, 0);\n", 0)
+            read_socket()
+        end
+    end
   
     #
     # Description:

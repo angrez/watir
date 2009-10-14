@@ -119,7 +119,7 @@ class TC_Links < Test::Unit::TestCase
     end
     
     def test_link_iterator
-        assert_equal(11, browser.links.length )
+        assert_equal(12, browser.links.length )
         assert_equal("Link Using a name" , browser.links[7].text)
         
         index = 1
@@ -138,6 +138,11 @@ class TC_Links < Test::Unit::TestCase
     end
     def test_link_to_s
        puts  browser.link(:id,"linktos").to_s
+    end
+    
+    def test_authentication
+        browser.link(:id, "link_auth").click_no_wait()
+        browser.logon("wrong.user", "wrong_password")
     end
 end
 
@@ -168,7 +173,7 @@ class TC_Frame_Links < Test::Unit::TestCase
             count+=1
         end
         
-        assert_equal(11 , count)
+        assert_equal(12 , count)
     end    
 end
 
@@ -182,7 +187,7 @@ class TC_Links_Display < Test::Unit::TestCase
     $stdout = @mockout
     browser.showLinks
     assert_equal(<<END_OF_MESSAGE, @mockout)
-There are 11 links
+There are 12 links
 link:  name: 
          id: 
        href: links2.html
@@ -220,13 +225,17 @@ link:  name:
        href: pass.html
       index: 9
 link:  name: 
+         id: link_auth
+       href: http://sharepoint.proteans.com/
+      index: 10
+link:  name: 
          id: linktos
        href: link_pass.html
-      index: 10
+      index: 11
 link:  name: test_link
          id: 
        href: link1.html
-      index: 11
+      index: 12
 END_OF_MESSAGE
   end
 end
