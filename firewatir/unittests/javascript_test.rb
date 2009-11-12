@@ -10,7 +10,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     end
     
     tag_method :test_alert, :fails_on_ie
-    def test_alert
+    def alert
         #browser.button(:id, "btnAlert").click_no_wait()
 
         #browser.click_jspopup_button("OK")
@@ -28,7 +28,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     end
     
     tag_method :test_confirm_ok, :fails_on_ie
-    def test_confirm_ok
+    def confirm_ok
         #browser.button(:id, "btnConfirm").click_no_wait()
         
         #browser.click_jspopup_button("OK")
@@ -46,7 +46,7 @@ class TC_JavaScript_Test < Test::Unit::TestCase
     end
     
     tag_method :test_confirm_cancel, :fails_on_ie
-    def test_confirm_cancel
+    def confirm_cancel
         #browser.button(:id, "btnConfirm").click_no_wait()
         
         #browser.click_jspopup_button("Cancel")
@@ -71,5 +71,23 @@ class TC_JavaScript_Test < Test::Unit::TestCase
 
         assert_equal(browser.text_field(:id, "txtAlert").value , "You pressed OK button")
         assert_equal("Press OK", browser.get_popup_text)
+    end
+   
+    def test_alert_new
+        browser.button(:id, "btnAlert").click_no_wait()
+        browser.click_jspopup_button("OK")
+        assert_equal(browser.text_field(:id, "testResult").value , "You pressed the Alert button!")
+    end
+    
+    def test_confirm_ok_new
+        browser.button(:id, "btnConfirm").click_no_wait()
+        browser.click_jspopup_button("ok")
+        assert_equal(browser.text_field(:id, "testResult").value , "You pressed the Confirm and OK button!")
+    end
+    
+    def test_confirm_cancel_new
+        browser.button(:id, "btnConfirm").click_no_wait()
+        browser.click_jspopup_button("cancel")
+        assert_equal(browser.text_field(:id, "testResult").value, "You pressed the Confirm and Cancel button!")
     end
 end
